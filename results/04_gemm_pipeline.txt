@@ -13,10 +13,10 @@
   [ok]      cuBLAS FP16               max_abs=3.815e-06 max_rel=2.288e-03
 
 [timing 4096x4096x4096, fp16 in / fp32 accumulate]
-  D  single buffer + LDG/STS     16.55 ms      8306 GFLOP/s    1.00x vs D
-  E  double buffer + LDG/STS     15.85 ms      8669 GFLOP/s    1.04x vs D
-  F  single buffer + cp.async     6.94 ms     19814 GFLOP/s    2.39x vs D
-  G  double buffer + cp.async     5.11 ms     26911 GFLOP/s    3.24x vs D
-     cuBLAS FP16                  4.08 ms     33663 GFLOP/s    4.05x vs D
+  D  single buffer + LDG/STS     21.08 ms      6520 GFLOP/s    1.00x vs D
+  E  double buffer + LDG/STS     20.06 ms      6853 GFLOP/s    1.05x vs D
+  F  single buffer + cp.async     8.48 ms     16210 GFLOP/s    2.49x vs D
+  G  double buffer + cp.async     6.53 ms     21048 GFLOP/s    3.23x vs D
+     cuBLAS FP16                  5.16 ms     26635 GFLOP/s    4.09x vs D
 ---------------------------------------------------------------------
   all checks passed

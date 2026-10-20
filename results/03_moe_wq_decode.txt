@@ -1,0 +1,66 @@
+﻿=====================================================================
+ Device : NVIDIA GeForce RTX 5060 Laptop GPU  (sm_120)
+ SMs    : 26   |  shared/block: 48 KB  |  L2: 32768 KB
+ Peak BW: 384.0 GB/s  |  Peak FP32: 11228.7 GFLOP/s
+ Ridge  : 29.24 FLOP/byte  (below this arithmetic intensity -> memory-bound)
+=====================================================================
+
+[correctness: kernel output vs fp64 CPU GEMM over the identical (de)quantized weights]
+  [ok]   W16A16 kernel, K split 1 ways (rows/expert up to 28, one expert empty)  max_abs=4.593e-04 max_rel=3.539e-03
+  [ok]   W16A16 kernel, K split 4 ways (rows/expert up to 28, one expert empty)  max_abs=4.593e-04 max_rel=3.539e-03
+  [ok]   W8A16 kernel, K split 1 ways (rows/expert up to 28, one expert empty)  max_abs=4.853e-04 max_rel=5.985e-03
+  [ok]   W8A16 kernel, K split 4 ways (rows/expert up to 28, one expert empty)  max_abs=4.853e-04 max_rel=2.840e-03
+  [ok]   W4A16 kernel, K split 1 ways (rows/expert up to 28, one expert empty)  max_abs=4.278e-04 max_rel=1.656e-03
+  [ok]   W4A16 kernel, K split 4 ways (rows/expert up to 28, one expert empty)  max_abs=4.278e-04 max_rel=1.656e-03
+
+=====================================================================
+ fine-grained MoE  E=64 k=6 d=2048 f=1408   T=1 
+ 6 rows over 6 active experts (max 1 rows on one expert)
+   expert GEMM stage                   time(ms)  weight MB  weight GB/s  vs cuBLAS
+   cuBLAS grouped GEMM, fp16 weights     0.1247       34.6        277.4      1.00x
+   this repo, fp16 weights ks=2          0.1187       34.6        291.5      1.05x   SQNR vs fp16: 86.3 dB
+   this repo, W8A16 (int8, g128) ks=4    0.0661       17.6        265.8      1.89x   SQNR vs fp16: 48.1 dB
+   this repo, W4A16 (int4, g128) ks=4    0.0416        8.9        214.4      3.00x   SQNR vs fp16: 22.9 dB
+   full layer with W4A16 (route + permute + GEMM + combine, no host sync): 0.0626 ms
+
+=====================================================================
+ fine-grained MoE  E=64 k=6 d=2048 f=1408   T=16
+ 96 rows over 27 active experts (max 15 rows on one expert)
+   expert GEMM stage                   time(ms)  weight MB  weight GB/s  vs cuBLAS
+   cuBLAS grouped GEMM, fp16 weights     0.4803      155.7        324.2      1.00x
+   this repo, fp16 weights ks=1          0.5020      155.7        310.2      0.96x   SQNR vs fp16: 88.1 dB
+   this repo, W8A16 (int8, g128) ks=1    0.2793       79.1        283.1      1.72x   SQNR vs fp16: 48.2 dB
+   this repo, W4A16 (int4, g128) ks=1    0.2031       40.1        197.6      2.36x   SQNR vs fp16: 23.1 dB
+   full layer with W4A16 (route + permute + GEMM + combine, no host sync): 0.2231 ms
+
+=====================================================================
+ fine-grained MoE  E=64 k=6 d=2048 f=1408   T=64
+ 384 rows over 45 active experts (max 58 rows on one expert)
+   expert GEMM stage                   time(ms)  weight MB  weight GB/s  vs cuBLAS
+   cuBLAS grouped GEMM, fp16 weights     0.7956      259.5        326.2      1.00x
+   this repo, fp16 weights ks=1          1.1387      259.5        227.9      0.70x   SQNR vs fp16: 87.8 dB
+   this repo, W8A16 (int8, g128) ks=1    0.6425      131.8        205.1      1.24x   SQNR vs fp16: 48.2 dB
+   this repo, W4A16 (int4, g128) ks=1    0.5742       66.9        116.5      1.39x   SQNR vs fp16: 23.0 dB
+   full layer with W4A16 (route + permute + GEMM + combine, no host sync): 0.6001 ms
+
+=====================================================================
+ Mixtral-like      E=8  k=2 d=4096 f=14336  T=1 
+ 2 rows over 2 active experts (max 1 rows on one expert)
+   expert GEMM stage                   time(ms)  weight MB  weight GB/s  vs cuBLAS
+   cuBLAS grouped GEMM, fp16 weights     0.7117      234.9        330.0      1.00x
+   this repo, fp16 weights ks=1          0.6758      234.9        347.5      1.05x   SQNR vs fp16: 85.3 dB
+   this repo, W8A16 (int8, g128) ks=1    0.3530      119.3        337.9      2.02x   SQNR vs fp16: 48.2 dB
+   this repo, W4A16 (int4, g128) ks=2    0.2029       60.6        298.4      3.51x   SQNR vs fp16: 23.1 dB
+   full layer with W4A16 (route + permute + GEMM + combine, no host sync): 0.2167 ms
+
+=====================================================================
+ Mixtral-like      E=8  k=2 d=4096 f=14336  T=16
+ 32 rows over 7 active experts (max 16 rows on one expert)
+   expert GEMM stage                   time(ms)  weight MB  weight GB/s  vs cuBLAS
+   cuBLAS grouped GEMM, fp16 weights     2.7166      822.1        302.6      1.00x
+   this repo, fp16 weights ks=1          3.0079      822.1        273.3      0.90x   SQNR vs fp16: 85.4 dB
+   this repo, W8A16 (int8, g128) ks=1    1.3865      417.5        301.1      1.96x   SQNR vs fp16: 48.2 dB
+   this repo, W4A16 (int4, g128) ks=1    0.8538      211.9        248.2      3.18x   SQNR vs fp16: 23.0 dB
+   full layer with W4A16 (route + permute + GEMM + combine, no host sync): 0.8781 ms
+---------------------------------------------------------------------
+  all checks passed

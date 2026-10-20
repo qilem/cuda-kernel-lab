@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <functional>
 
 #define CUDA_CHECK(call)                                                       \
     do {                                                                       \
@@ -100,6 +101,77 @@ struct Bench {
         CUDA_CHECK(cudaEventDestroy(end));
         std::sort(samples.begin(), samples.end());
         return samples[iters / 2];
+    }
+
+    // Like time(), but writes a buffer twice the L2 size before every timed launch, so the
+    // kernel's inputs come from DRAM. Needed for decode-style kernels whose weights or KV
+    // (tens of MB) would otherwise stay L2-resident across back-to-back runs; in a real
+    // model the other layers evict them between uses.
+    template <typename F>
+    float time_cold(F&& launch, int warmup = 5, int iters = 30) {
+        ensure_flush();
+        for (int i = 0; i < warmup; ++i) launch();
+        CUDA_CHECK_KERNEL();
+        std::vector<float> samples(iters);
+        cudaEvent_t beg, end;
+        CUDA_CHECK(cudaEventCreate(&beg));
+        CUDA_CHECK(cudaEventCreate(&end));
+        for (int i = 0; i < iters; ++i) {
+            CUDA_CHECK(cudaMemsetAsync(flush_buf, i & 0xff, flush_bytes));
+            CUDA_CHECK(cudaEventRecord(beg));
+            launch();
+            CUDA_CHECK(cudaEventRecord(end));
+            CUDA_CHECK(cudaEventSynchronize(end));
+            CUDA_CHECK(cudaEventElapsedTime(&samples[i], beg, end));
+        }
+        CUDA_CHECK(cudaEventDestroy(beg));
+        CUDA_CHECK(cudaEventDestroy(end));
+        std::sort(samples.begin(), samples.end());
+        return samples[iters / 2];
+    }
+    void*  flush_buf   = nullptr;
+    size_t flush_bytes = 0;
+    void ensure_flush() {
+        if (flush_buf) return;
+        flush_bytes = std::max<size_t>((size_t)2 * prop.l2CacheSize, (size_t)64 << 20);
+        CUDA_CHECK(cudaMalloc(&flush_buf, flush_bytes));
+    }
+
+    // Times several alternatives in interleaved rounds (A B C A B C ...) and returns each
+    // one's median. A laptop GPU's clock drifts with temperature over a run; timing methods
+    // back to back would hand whichever runs first the cooler, faster GPU. Interleaving gives
+    // every method the same conditions, so the RATIOS between methods are trustworthy.
+    std::vector<float> time_interleaved(const std::vector<std::function<void()>>& fns,
+                                        int rounds = 12, int per_round = 3, int warmup = 3,
+                                        bool cold = false) {      // cold: flush L2 before each sample
+        if (cold) ensure_flush();
+        for (auto& fn : fns)
+            for (int i = 0; i < warmup; ++i) fn();
+        CUDA_CHECK_KERNEL();
+        std::vector<std::vector<float>> samples(fns.size());
+        cudaEvent_t beg, end;
+        CUDA_CHECK(cudaEventCreate(&beg));
+        CUDA_CHECK(cudaEventCreate(&end));
+        for (int r = 0; r < rounds; ++r)
+            for (size_t m = 0; m < fns.size(); ++m)
+                for (int i = 0; i < per_round; ++i) {
+                    float ms;
+                    if (cold) CUDA_CHECK(cudaMemsetAsync(flush_buf, (r + i) & 0xff, flush_bytes));
+                    CUDA_CHECK(cudaEventRecord(beg));
+                    fns[m]();
+                    CUDA_CHECK(cudaEventRecord(end));
+                    CUDA_CHECK(cudaEventSynchronize(end));
+                    CUDA_CHECK(cudaEventElapsedTime(&ms, beg, end));
+                    samples[m].push_back(ms);
+                }
+        CUDA_CHECK(cudaEventDestroy(beg));
+        CUDA_CHECK(cudaEventDestroy(end));
+        std::vector<float> med;
+        for (auto& s : samples) {
+            std::sort(s.begin(), s.end());
+            med.push_back(s[s.size() / 2]);
+        }
+        return med;
     }
 
     void header() {

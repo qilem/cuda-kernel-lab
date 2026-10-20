@@ -1,0 +1,22 @@
+device: NVIDIA GeForce RTX 5060 Laptop GPU | torch 2.14.0.dev20260616+cu132
+
+[A] cuDNN fused attention, GQA decode (Hq=32, Hkv=8, D=128, fp16, dense contiguous KV)
+  shape                         time(ms)   KV GB/s   max err
+  B=1 L=32768                     0.4398     305.2   1.3e-05
+  B=8 L=8192                      0.8136     329.9   2.4e-05
+  B=64 L=1024                     0.7756     346.1   7.4e-05
+
+[B] cuDNN on the shared-prefix batches (each request's full KV, nothing shared)
+  shape                                   time(ms)   KV GB/s
+  B=64 prefix=4096 suffix=256               3.5699     319.6
+  B=32 prefix=16384 suffix=512              7.5500     293.3
+  B=8 prefix=16384 suffix=512               1.5878     348.7
+
+[C] tinygemm int4 weight-only GEMM (bf16 activations, group 128), one call per active expert,
+    replayed from a CUDA Graph (no Python / launch gaps)
+  shape                              experts  time(ms)  weight MB    GB/s
+  T=1 E=64 d=2048 f=1408                   6    0.0557        9.2   165.1
+  T=16 E=64 d=2048 f=1408                 27    0.2252       41.4   183.7
+  T=64 E=64 d=2048 f=1408                 45    0.4884       68.9   141.1
+  T=1 E=8 d=4096 f=14336                   2    0.2045       62.4   305.1
+  T=16 E=8 d=4096 f=14336                  7    0.8601      218.4   253.9

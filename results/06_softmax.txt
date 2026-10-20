@@ -23,8 +23,8 @@
 [timing 4096 x 4096 fp32; ideal traffic = read once + write once]
 kernel                              time(ms)      GB/s      %BW    GFLOP/s    %FP32  bound
 ---------------------------------------------------------------------
-softmax_safe   (3 passes)             0.4637     289.4    75.4%        0.0     0.0%  mem (AI=0.00)
-softmax_online (2 passes)             0.4529     296.4    77.2%        0.0     0.0%  mem (AI=0.00)
-softmax_vec4   (3 passes)             0.4213     318.6    83.0%        0.0     0.0%  mem (AI=0.00)
+softmax_safe   (3 passes)             0.4540     295.7    77.0%        0.0     0.0%  mem (AI=0.00)
+softmax_online (2 passes)             0.4468     300.4    78.2%        0.0     0.0%  mem (AI=0.00)
+softmax_vec4   (3 passes)             0.4283     313.4    81.6%        0.0     0.0%  mem (AI=0.00)
 ---------------------------------------------------------------------
   all checks passed

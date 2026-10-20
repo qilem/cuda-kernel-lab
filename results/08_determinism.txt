@@ -9,15 +9,15 @@
   (1e8 + 1) - 1e8 = 0      (1e8 - 1e8) + 1 = 1
 
 [sum of 4194304 floats, 5 runs each; fp64 reference 2096108.8217]
-  atomicAdd per element  last=2096008.7500  distinct bit patterns over 5 runs: 5
-  atomicAdd per block    last=2096108.5000  distinct bit patterns over 5 runs: 4
+  atomicAdd per element  last=2096017.8750  distinct bit patterns over 5 runs: 5
+  atomicAdd per block    last=2096108.8750  distinct bit patterns over 5 runs: 2
   two-pass, no atomics   last=2096108.8750  distinct bit patterns over 5 runs: 1
 
 [scatter_add: 200000 rows of width 64 into 1000 output rows]
-  [ok]   atomicAdd           run-to-run bit diffs 20300 / 64000  max_abs=1.049e-05 max_rel=5.076e-02
-         time 0.2852 ms
+  [ok]   atomicAdd           run-to-run bit diffs 20946 / 64000  max_abs=1.049e-05 max_rel=5.076e-02
+         time 0.2950 ms
   [ok]   sort + segment sum  run-to-run bit diffs     0 / 64000  max_abs=9.537e-06 max_rel=5.076e-02
-         time 0.1766 ms
+         time 0.1776 ms
   (sort cost is excluded: the index set is reused across calls in this benchmark)
 ---------------------------------------------------------------------
   all checks passed

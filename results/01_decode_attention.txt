@@ -79,26 +79,46 @@
   [ok]   page-boundary lengths, G=2  v3 chunks=7   out  max_abs=1.203e-04 max_rel=4.807e-04
   [ok]   page-boundary lengths, G=2  v3 chunks=7   lse  max_abs=2.384e-07 max_rel=8.462e-08
 
-[achievable DRAM read bandwidth: stream 256 MB with 16 B loads] 341.6 GB/s = 89.0% of theoretical
+[correctness: cascade (shared prefix on Tensor Cores + split-KV suffix) vs fp64]
+  [ok]   MHA, prefix 64, suffix 1/17/40   prefix 64 tok, out  max_abs=8.512e-05 max_rel=3.870e-01
+  [ok]   MHA, prefix 64, suffix 1/17/40   prefix 64 tok, lse  max_abs=1.049e-05 max_rel=2.489e-06
+  [ok]   G=4, prefix 48 (partial tile)    prefix 48 tok, out  max_abs=1.238e-04 max_rel=6.987e+00
+  [ok]   G=4, prefix 48 (partial tile)    prefix 48 tok, lse  max_abs=2.909e-05 max_rel=7.135e-06
+  [ok]   G=4, 40 seqs = 160 queries       prefix 1024 tok, out  max_abs=3.699e-05 max_rel=5.294e+01
+  [ok]   G=4, 40 seqs = 160 queries       prefix 1024 tok, lse  max_abs=1.478e-05 max_rel=2.094e-06
+  [ok]   G=8                              prefix 256 tok, out  max_abs=4.816e-05 max_rel=1.160e+00
+  [ok]   G=8                              prefix 256 tok, lse  max_abs=1.001e-05 max_rel=1.788e-06
+  [ok]    unshared batch: detected shared pages = 0
+
+[achievable DRAM read bandwidth: stream 256 MB with 16 B loads] 336.1 GB/s = 87.5% of theoretical
 
 [performance: Hq=32, Hkv=8 (G=4), D=128, fp16, pages scattered]
-  memory-bound kernel: %BW is vs theoretical 384 GB/s; achievable ceiling is 342 GB/s
+  memory-bound kernel: %BW is vs theoretical 384 GB/s; achievable ceiling is 336 GB/s
 kernel                              time(ms)      GB/s      %BW    GFLOP/s    %FP32  bound
 ---------------------------------------------------------------------
   B=1  L=32K (long context)
-  v2 no split          (   8 blk)     2.4370      55.1    14.3%      220.3     2.0%  mem (AI=4.00)
-  v1 split-KV          ( 128 blk)     0.5263     255.1    66.4%     1020.1     9.1%  mem (AI=4.00)
-  v2 split-KV +swizzle ( 104 blk)     0.3915     342.9    89.3%     1371.4    12.2%  mem (AI=4.00)
-  v3 v2 + cp.async x2  (  48 blk)     0.3844     349.2    90.9%     1396.5    12.4%  mem (AI=4.00)
+  v2 no split          (   8 blk)     2.7655      48.5    12.6%      194.1     1.7%  mem (AI=4.00)
+  v1 split-KV          ( 128 blk)     0.5404     248.4    64.7%      993.6     8.8%  mem (AI=4.00)
+  v2 split-KV +swizzle ( 104 blk)     0.4326     310.3    80.8%     1241.0    11.1%  mem (AI=4.00)
+  v3 v2 + cp.async x2  (  48 blk)     0.4134     324.7    84.6%     1298.6    11.6%  mem (AI=4.00)
   B=8  L=8K
-  v2 no split          (  64 blk)     0.8318     322.9    84.1%     1290.9    11.5%  mem (AI=4.00)
-  v1 split-KV          ( 128 blk)     1.0164     264.2    68.8%     1056.5     9.4%  mem (AI=4.00)
-  v2 split-KV +swizzle (  64 blk)     0.8287     324.1    84.4%     1295.7    11.5%  mem (AI=4.00)
-  v3 v2 + cp.async x2  (  64 blk)     0.9028     297.5    77.5%     1189.3    10.6%  mem (AI=4.00)
+  v2 no split          (  64 blk)     0.9032     297.4    77.4%     1188.9    10.6%  mem (AI=4.00)
+  v1 split-KV          ( 128 blk)     1.0322     260.2    67.8%     1040.3     9.3%  mem (AI=4.00)
+  v2 split-KV +swizzle (  64 blk)     0.9052     296.7    77.3%     1186.2    10.6%  mem (AI=4.00)
+  v3 v2 + cp.async x2  (  64 blk)     0.9154     293.4    76.4%     1172.9    10.4%  mem (AI=4.00)
   B=64 L=1K (large batch)
-  v2 no split          ( 512 blk)     0.7697     350.1    91.2%     1395.1    12.4%  mem (AI=3.98)
-  v1 split-KV          ( 512 blk)     1.0244     263.1    68.5%     1048.2     9.3%  mem (AI=3.98)
-  v2 split-KV +swizzle ( 512 blk)     0.7681     350.9    91.4%     1398.0    12.5%  mem (AI=3.98)
-  v3 v2 + cp.async x2  ( 512 blk)     0.7649     352.3    91.7%     1403.8    12.5%  mem (AI=3.98)
+  v2 no split          ( 512 blk)     0.8250     326.7    85.1%     1301.5    11.6%  mem (AI=3.98)
+  v1 split-KV          ( 512 blk)     1.0527     256.0    66.7%     1020.0     9.1%  mem (AI=3.98)
+  v2 split-KV +swizzle ( 512 blk)     0.8252     326.5    85.0%     1301.1    11.6%  mem (AI=3.98)
+  v3 v2 + cp.async x2  ( 512 blk)     0.7925     340.0    88.5%     1354.8    12.1%  mem (AI=3.98)
+
+[performance: shared-prefix batches, Hq=32, Hkv=8, D=128, fp16, L2 flushed before each run]
+  'naive bytes' = KV every request would read without sharing; split-KV v2 reads that
+  through L2, so the L2 (32 MB here) can already dedup part of a small shared prefix.
+                                                          v2 (ms)    cascade  naive GB/s*   speedup
+  B=64, shared 4K system prompt, 256-token suffixes         2.165      0.926         1232     2.34x
+  B=32, shared 16K document,     512-token suffixes         6.289      1.334         1660     4.72x
+  B=8,  shared 16K document,     512-token suffixes         1.456      0.661          837     2.20x
+  * naive bytes / cascade time: the bandwidth a non-sharing kernel would need to match it
 ---------------------------------------------------------------------
   all checks passed

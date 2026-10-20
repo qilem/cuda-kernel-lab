@@ -1,4 +1,4 @@
-// 05_softmax.cu
+// 06_softmax.cu
 //
 // Row softmax three ways, one block per row:
 //   safe    3 passes: max, sum(exp(x - max)), write
@@ -24,7 +24,7 @@ __device__ __forceinline__ float warp_sum(float v) {
 
 // Two-level block reduction: warp shuffle, then warp 0 reduces the per-warp results.
 // The trailing __syncthreads matters: without it, a second call in the same kernel can
-// overwrite s[0] before every thread has read it (see 08_reduction_race.cu).
+// overwrite s[0] before every thread has read it (see 09_reduction_race.cu).
 __device__ __forceinline__ float block_max(float v) {
     __shared__ float s[32];
     int lane = threadIdx.x % 32, wid = threadIdx.x / 32, nw = (blockDim.x + 31) / 32;

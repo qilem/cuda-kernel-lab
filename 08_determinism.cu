@@ -1,4 +1,4 @@
-// 07_determinism.cu
+// 08_determinism.cu
 //
 // Floating-point addition is not associative, so any reduction whose order depends on
 // scheduling (float atomicAdd) gives different bits from run to run. Two places this shows

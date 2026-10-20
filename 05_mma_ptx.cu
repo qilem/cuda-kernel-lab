@@ -1,4 +1,4 @@
-// 04_mma_ptx.cu
+// 05_mma_ptx.cu
 //
 // Hand-written inline PTX mma.sync.aligned.m16n8k16 vs the WMMA API.
 //

@@ -1,4 +1,4 @@
-// 01_gemm_pipeline.cu
+// 04_gemm_pipeline.cu
 //
 // Question: does double buffering actually help a Tensor Core GEMM?
 //
@@ -213,12 +213,11 @@ int main() {
         CUDA_CHECK(cudaMalloc(&dC, (size_t)M * N * 4));
         CUDA_CHECK(cudaMemset(dA, 0, (size_t)M * K * 2)); CUDA_CHECK(cudaMemset(dB, 0, (size_t)K * N * 2));
         double fl = 2.0 * M * N * K;
-        float base = 0;
-        for (int w = 0; w < 5; w++) {
-            float ms = b.time([&] { launch(w, dA, dB, dC, M, N, K); }, 3, 10);
-            if (w == 0) base = ms;
-            printf("  %s  %7.2f ms   %7.0f GFLOP/s   %5.2fx vs D\n", nm[w], ms, fl / ms / 1e6, base / ms);
-        }
+        std::vector<std::function<void()>> fns;
+        for (int w = 0; w < 5; w++) fns.push_back([&, w] { launch(w, dA, dB, dC, M, N, K); });
+        std::vector<float> tm = b.time_interleaved(fns, 8, 2);   // interleaved: same thermal state
+        for (int w = 0; w < 5; w++)
+            printf("  %s  %7.2f ms   %7.0f GFLOP/s   %5.2fx vs D\n", nm[w], tm[w], fl / tm[w] / 1e6, tm[0] / tm[w]);
         CUDA_CHECK(cudaFree(dA)); CUDA_CHECK(cudaFree(dB)); CUDA_CHECK(cudaFree(dC));
     }
     cublasDestroy(h);

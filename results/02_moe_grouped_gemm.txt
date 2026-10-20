@@ -21,16 +21,16 @@
 
  expert GEMM stage (120.3 useful GFLOP, 940 MB of active expert weights)
    method                                    time(ms)  TFLOP/s* weight GB/s launches
-   (a) cuBLAS, one GEMM per expert              5.067      23.7       185.4        8
-   (b) cuBLAS batched, padded (4.0x MACs)      14.141       8.5        66.4        1
-   (c) cuBLAS grouped GEMM                      6.927      17.4       135.6        1
-   (d) this repo, 64x64 tiles                   6.008      20.0       156.4        1
-   (e) this repo, 128x128 tiles                 7.714      15.6       121.8        1
+   (a) cuBLAS, one GEMM per expert              6.744      17.8       139.3        8
+   (b) cuBLAS batched, padded (4.0x MACs)      18.953       6.3        49.6        1
+   (c) cuBLAS grouped GEMM                      8.313      14.5       113.0        1
+   (d) this repo, 64x64 tiles                   7.263      16.6       129.4        1
+   (e) this repo, 128x128 tiles                 8.547      14.1       109.9        1
    * useful FLOPs only (padding work is not credited)
 
- full layer, auto tiles (route + permute + grouped GEMM + combine): 8.087 ms  (GEMM = 74%)
- combine, gather (fixed order): 0.111 ms, outputs differing across 2 full runs: 0 / 7340032
- combine, atomicAdd scatter   : 0.313 ms, outputs differing across 2 runs     : 0 / 7340032
+ full layer, auto tiles (route + permute + grouped GEMM + combine): 9.100 ms  (GEMM = 80%)
+ combine, gather (fixed order): 0.109 ms, outputs differing across 2 full runs: 0 / 7340032
+ combine, atomicAdd scatter   : 0.314 ms, outputs differing across 2 runs     : 0 / 7340032
 
 =====================================================================
  fine-grained MoE   prefill  T=512  E=64 k=6 d=2048 f=1408 
@@ -40,16 +40,16 @@
 
  expert GEMM stage (17.7 useful GFLOP, 352 MB of active expert weights)
    method                                    time(ms)  TFLOP/s* weight GB/s launches
-   (a) cuBLAS, one GEMM per expert              1.633      10.8       215.4       61
-   (b) cuBLAS batched, padded (9.9x MACs)       5.569       3.2        63.2        1
-   (c) cuBLAS grouped GEMM                      1.303      13.6       270.0        1
-   (d) this repo, 64x64 tiles                   1.556      11.4       226.1        1
-   (e) this repo, 128x128 tiles                 1.857       9.5       189.5        1
+   (a) cuBLAS, one GEMM per expert              1.747      10.1       201.3       61
+   (b) cuBLAS batched, padded (9.9x MACs)       7.415       2.4        47.4        1
+   (c) cuBLAS grouped GEMM                      1.396      12.7       252.0        1
+   (d) this repo, 64x64 tiles                   1.636      10.8       215.0        1
+   (e) this repo, 128x128 tiles                 1.899       9.3       185.3        1
    * useful FLOPs only (padding work is not credited)
 
- full layer, auto tiles (route + permute + grouped GEMM + combine): 1.668 ms  (GEMM = 93%)
- combine, gather (fixed order): 0.014 ms, outputs differing across 2 full runs: 0 / 720896
- combine, atomicAdd scatter   : 0.045 ms, outputs differing across 2 runs     : 326628 / 720896
+ full layer, auto tiles (route + permute + grouped GEMM + combine): 1.778 ms  (GEMM = 92%)
+ combine, gather (fixed order): 0.018 ms, outputs differing across 2 full runs: 0 / 720896
+ combine, atomicAdd scatter   : 0.052 ms, outputs differing across 2 runs     : 341202 / 720896
 
 =====================================================================
  fine-grained MoE   decode   T=16   E=64 k=6 d=2048 f=1408 
@@ -59,15 +59,15 @@
 
  expert GEMM stage (0.6 useful GFLOP, 156 MB of active expert weights)
    method                                    time(ms)  TFLOP/s* weight GB/s launches
-   (a) cuBLAS, one GEMM per expert              0.597       0.9       261.0       27
-   (b) cuBLAS batched, padded (10.0x MACs)      1.047       0.5       148.7        1
-   (c) cuBLAS grouped GEMM                      0.468       1.2       333.0        1
-   (d) this repo, 64x64 tiles                   0.473       1.2       329.2        1
-   (e) this repo, 128x128 tiles                 0.677       0.8       230.0        1
+   (a) cuBLAS, one GEMM per expert              0.658       0.8       236.7       27
+   (b) cuBLAS batched, padded (10.0x MACs)      1.090       0.5       142.9        1
+   (c) cuBLAS grouped GEMM                      0.526       1.1       295.9        1
+   (d) this repo, 64x64 tiles                   0.543       1.0       287.0        1
+   (e) this repo, 128x128 tiles                 0.892       0.6       174.5        1
    * useful FLOPs only (padding work is not credited)
 
- full layer, auto tiles (route + permute + grouped GEMM + combine): 0.508 ms  (GEMM = 93%)
- combine, gather (fixed order): 0.010 ms, outputs differing across 2 full runs: 0 / 22528
- combine, atomicAdd scatter   : 0.015 ms, outputs differing across 2 runs     : 6379 / 22528
+ full layer, auto tiles (route + permute + grouped GEMM + combine): 0.637 ms  (GEMM = 85%)
+ combine, gather (fixed order): 0.012 ms, outputs differing across 2 full runs: 0 / 22528
+ combine, atomicAdd scatter   : 0.021 ms, outputs differing across 2 runs     : 7760 / 22528
 ---------------------------------------------------------------------
   all checks passed

@@ -1,4 +1,4 @@
-// 06_int8_gemm.cu
+// 07_int8_gemm.cu
 //
 // W8A8 quantized GEMM, written out explicitly:
 //   weights     per-output-channel SYMMETRIC int8:   s = max|w| / 127,  z = 0

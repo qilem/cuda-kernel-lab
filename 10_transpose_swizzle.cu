@@ -1,4 +1,4 @@
-// 09_transpose_swizzle.cu
+// 10_transpose_swizzle.cu
 //
 // Matrix transpose through shared memory: three ways to deal with bank conflicts.
 //

@@ -16,8 +16,8 @@ bin:
 run: all
 	@for b in $(BINS); do echo "########## $$b"; ./$$b || exit 1; done
 
-racecheck: bin/08_reduction_race
-	compute-sanitizer --tool racecheck ./bin/08_reduction_race 1
+racecheck: bin/09_reduction_race
+	compute-sanitizer --tool racecheck ./bin/09_reduction_race 1
 
 clean:
 	rm -rf bin

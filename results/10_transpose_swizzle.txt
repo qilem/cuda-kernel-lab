@@ -14,10 +14,10 @@
   [ok]   naive              max_abs=0.000e+00 max_rel=0.000e+00
 kernel                              time(ms)      GB/s      %BW    GFLOP/s    %FP32  bound
 ---------------------------------------------------------------------
-naive                                 1.0982     122.2    31.8%        0.0     0.0%  mem (AI=0.00)
+naive                                 1.1120     120.7    31.4%        0.0     0.0%  mem (AI=0.00)
   [ok]   padded tile[32][33]  max_abs=0.000e+00 max_rel=0.000e+00
-padded tile[32][33]                   0.6190     216.8    56.5%        0.0     0.0%  mem (AI=0.00)
+padded tile[32][33]                   0.5987     224.2    58.4%        0.0     0.0%  mem (AI=0.00)
   [ok]   XOR swizzle        max_abs=0.000e+00 max_rel=0.000e+00
-XOR swizzle                           0.5968     224.9    58.6%        0.0     0.0%  mem (AI=0.00)
+XOR swizzle                           0.5976     224.6    58.5%        0.0     0.0%  mem (AI=0.00)
 ---------------------------------------------------------------------
   all checks passed

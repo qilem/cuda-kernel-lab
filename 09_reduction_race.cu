@@ -1,4 +1,4 @@
-// 08_reduction_race.cu
+// 09_reduction_race.cu
 //
 // A shared-memory race that tests cannot find but compute-sanitizer can.
 //
@@ -12,10 +12,10 @@
 // Fix: read into a register, then barrier, then return.
 //
 // Run:
-//   compute-sanitizer --tool racecheck bin/08_reduction_race   (reports hazards in v1)
+//   compute-sanitizer --tool racecheck bin/09_reduction_race   (reports hazards in v1)
 // Measured on RTX 5060 Laptop: 200 normal runs of the unsafe version give 0 wrong rows.
-// Under racecheck (which changes warp scheduling) the same binary reports 13,732 hazards,
-// all in block_sum_unsafe, and 1,333 / 2,048 rows come out wrong. The safe version: 0 and 0.
+// Under racecheck (which changes warp scheduling) the same binary reports 13,656 hazards,
+// all in block_sum_unsafe, and 1,344 / 2,048 rows come out wrong. The safe version: 0 and 0.
 
 #include "common/bench.cuh"
 
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
         printf("  %s worst run: %d / %d rows wrong\n", v == 0 ? "unsafe (2 barriers)" : "safe   (3 barriers)", worst, rows);
     }
     printf("\n  A clean test run proves nothing here. Check with:\n");
-    printf("    compute-sanitizer --tool racecheck bin/08_reduction_race 1\n");
+    printf("    compute-sanitizer --tool racecheck bin/09_reduction_race 1\n");
     CUDA_CHECK(cudaFree(dx)); CUDA_CHECK(cudaFree(dm)); CUDA_CHECK(cudaFree(dv));
     return 0;
 }
