@@ -4,6 +4,8 @@ Hand-written CUDA kernels for LLM inference: **paged split-KV decode attention**
 
 Every kernel is checked against an fp64 CPU reference and benchmarked against cuBLAS and/or the device roofline. Negative results are kept and explained instead of deleted.
 
+**What is not new.** None of the algorithms here are new. Split-KV decode with log-sum-exp merging is Flash-Decoding (Dao et al., 2023), as found in FlashInfer and vLLM's PagedAttention V2. The paged-KV page-table layout follows FlashInfer's decode API. Sorting tokens by expert and launching a grouped GEMM over an upper bound of tiles, with surplus blocks exiting early, is how vLLM's `fused_moe` (`moe_align_block_size`) works, and CUTLASS grouped GEMM also schedules its problems on the device. XOR-swizzled shared memory is standard in CUTLASS/CuTe and Hopper TMA. The point of this repo is to implement these techniques from scratch, measure them against cuBLAS and the hardware limits, and explain what bounded each version.
+
 **Hardware.** RTX 5060 Laptop GPU (Blackwell, sm_120, 26 SMs, 384 GB/s theoretical DRAM; **342 GB/s measured** streaming-read ceiling), CUDA 13.3, Windows 11. The laptop GPU throttles under sustained load, so run-to-run timings vary by roughly ±10%. Full raw logs are in [`results/`](results/).
 
 ## Results at a glance
