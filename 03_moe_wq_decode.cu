@@ -149,6 +149,7 @@ __device__ __forceinline__ void gemv_pass(const half* Xp, const uint4* P4, const
 
         // CPT consecutive fp16 scales = 8 B (int8) or 16 B (int4): one vector load, used at the end
         __align__(16) half sh[C::CPT];
+        (void)sh;                                           // unused in the fp16 instantiation
         if constexpr (BITS < 16) {
             const half* sp = Sc + ((size_t)e * (d / GS) + kg / GS) * f + cw * C::CPT;
             if (col_ok) {
@@ -561,6 +562,131 @@ int main() {
         printf("   full layer with W4A16 (route + permute + GEMM + combine, no host sync): %.4f ms\n", t_full);
         CUDA_CHECK(cudaFree(Yref));
     }
+
+    // ================= end to end: what does "no host sync" buy? =================
+    // A library-built MoE layer has to bring the per-expert row counts to the host after
+    // routing, because cuBLAS grouped GEMM takes its problem sizes from host arrays. That
+    // device->host copy stalls the stream every layer, and the data-dependent host logic means
+    // the layer cannot be captured in a CUDA Graph. This repo's layer never leaves the GPU.
+    //   cuBLAS + host sync : route/permute -> D2H counts + sync -> host builds args -> cuBLAS grouped -> combine
+    //   ours, eager        : route/permute -> grouped GEMV -> combine, launched one by one
+    //   ours, CUDA Graph   : the same layer(s) captured once and replayed
+    // L layers each get their own weights (as in a real model); L2 is flushed before every sample.
+    printf("\n=====================================================================\n");
+    printf(" end to end: host-synced cuBLAS layer vs device-scheduled layer (+ CUDA Graph)\n");
+    printf(" fine-grained MoE E=64 k=6 d=2048 f=1408, fp16 activations, interleaved cold-L2 timing\n");
+    {
+        const int E = 64, K = 6, d = 2048, f = 1408, LMAX = 4;
+        cudaStream_t s;
+        CUDA_CHECK(cudaStreamCreate(&s));                   // blocking stream: orders with the timing events
+        cublasSetStream(h, s);
+        int* h_counts;
+        void** h_ptr;
+        void** d_ptr;
+        CUDA_CHECK(cudaMallocHost(&h_counts, E * sizeof(int)));
+        CUDA_CHECK(cudaMallocHost(&h_ptr, 3 * E * sizeof(void*)));
+        CUDA_CHECK(cudaMalloc(&d_ptr, 3 * E * sizeof(void*)));
+        std::vector<cublasOperation_t> ta(E, CUBLAS_OP_N), tb(E, CUBLAS_OP_N);
+        std::vector<int> gm(E, f), gn(E), gk(E, d), glda(E, f), gldb(E, d), gldc(E, f), gsize(E, 1);
+        std::vector<float> ga(E, 1.f), gb(E, 0.f);
+
+        for (int T : {1, 16}) {
+            MoeDecode m(T, E, K, d, f);
+            m.init(9);
+            const int A = T * K;
+            std::vector<half*> W(LMAX);
+            W[0] = m.W;
+            for (int l = 1; l < LMAX; l++) {
+                CUDA_CHECK(cudaMalloc(&W[l], (size_t)E * d * f * 2));
+                init_uniform<<<1024, 256>>>(W[l], (size_t)E * d * f, 100 + l, 1.0f / std::sqrt((float)d));
+            }
+            CUDA_CHECK_KERNEL();
+            std::vector<QuantWeights*> q16(LMAX), q4(LMAX);
+            for (int l = 0; l < LMAX; l++) {
+                q16[l] = new QuantWeights(16, W[l], E, d, f);
+                q4[l]  = new QuantWeights(4,  W[l], E, d, f);
+            }
+
+            auto cublas_layer = [&](int l) {
+                m.route_and_permute(s);
+                CUDA_CHECK(cudaMemcpyAsync(h_counts, m.counts, E * sizeof(int), cudaMemcpyDeviceToHost, s));
+                CUDA_CHECK(cudaStreamSynchronize(s));       // <- the stall this experiment measures
+                int G = 0, off = 0;
+                for (int e = 0; e < E; e++) {
+                    if (h_counts[e]) {
+                        gn[G] = h_counts[e];
+                        h_ptr[G]         = W[l] + (size_t)e * d * f;
+                        h_ptr[E + G]     = m.Xp + (size_t)off * d;
+                        h_ptr[2 * E + G] = m.Yp + (size_t)off * f;
+                        G++;
+                    }
+                    off += h_counts[e];
+                }
+                CUDA_CHECK(cudaMemcpyAsync(d_ptr, h_ptr, 3 * E * sizeof(void*), cudaMemcpyHostToDevice, s));
+                cublasGemmGroupedBatchedEx(h, ta.data(), tb.data(), gm.data(), gn.data(), gk.data(), ga.data(),
+                                           (const void* const*)d_ptr, CUDA_R_16F, glda.data(),
+                                           (const void* const*)(d_ptr + E), CUDA_R_16F, gldb.data(), gb.data(),
+                                           (void* const*)(d_ptr + 2 * E), CUDA_R_16F, gldc.data(),
+                                           G, gsize.data(), CUBLAS_COMPUTE_32F);
+                m.combine(s);
+            };
+            auto our_layer = [&](const QuantWeights* q) {
+                m.route_and_permute(s);
+                q->run(m.Xp, m.Yp, m.offsets, A, E, d, f, 0, s);
+                m.combine(s);
+            };
+
+            // correctness: the three paths must agree on the layer output
+            std::vector<float> o_cub, o_our;
+            cublas_layer(0);
+            CUDA_CHECK(cudaStreamSynchronize(s));
+            o_cub = to_float(m.out, (size_t)T * f);
+            our_layer(q16[0]);
+            CUDA_CHECK(cudaStreamSynchronize(s));
+            o_our = to_float(m.out, (size_t)T * f);
+            char tag[96];
+            snprintf(tag, sizeof tag, "T=%-2d layer output: ours (fp16) vs host-synced cuBLAS", T);
+            bench.verify(o_our.data(), o_cub.data(), o_our.size(), tag, 1e-2f, 2e-3f);
+
+            for (int L : {1, LMAX}) {
+                // capture L layers once; every workspace was already allocated by the eager runs above
+                for (int l = 0; l < L; l++) { our_layer(q16[l]); our_layer(q4[l]); }
+                CUDA_CHECK(cudaStreamSynchronize(s));
+                cudaGraph_t g16, g4;
+                cudaGraphExec_t x16, x4;
+                CUDA_CHECK(cudaStreamBeginCapture(s, cudaStreamCaptureModeGlobal));
+                for (int l = 0; l < L; l++) our_layer(q16[l]);
+                CUDA_CHECK(cudaStreamEndCapture(s, &g16));
+                CUDA_CHECK(cudaStreamBeginCapture(s, cudaStreamCaptureModeGlobal));
+                for (int l = 0; l < L; l++) our_layer(q4[l]);
+                CUDA_CHECK(cudaStreamEndCapture(s, &g4));
+                CUDA_CHECK(cudaGraphInstantiate(&x16, g16, 0));
+                CUDA_CHECK(cudaGraphInstantiate(&x4, g4, 0));
+
+                std::vector<float> tm = bench.time_interleaved(
+                    {[&] { for (int l = 0; l < L; l++) cublas_layer(l); },
+                     [&] { for (int l = 0; l < L; l++) our_layer(q16[l]); },
+                     [&] { CUDA_CHECK(cudaGraphLaunch(x16, s)); },
+                     [&] { CUDA_CHECK(cudaGraphLaunch(x4, s)); }},
+                    10, 3, 3, /*cold=*/true);
+                printf("\n T=%d, %d layer%s (time per layer)\n", T, L, L > 1 ? "s" : "");
+                const char* nm[4] = {"cuBLAS grouped FP16, host sync per layer",
+                                     "ours FP16, eager launches, no sync     ",
+                                     "ours FP16, CUDA Graph                  ",
+                                     "ours W4A16, CUDA Graph                 "};
+                for (int i = 0; i < 4; i++)
+                    printf("   %s  %8.4f ms   %5.2fx\n", nm[i], tm[i] / L, tm[0] / tm[i]);
+                CUDA_CHECK(cudaGraphExecDestroy(x16)); CUDA_CHECK(cudaGraphExecDestroy(x4));
+                CUDA_CHECK(cudaGraphDestroy(g16));     CUDA_CHECK(cudaGraphDestroy(g4));
+            }
+            for (int l = 0; l < LMAX; l++) { delete q16[l]; delete q4[l]; }
+            for (int l = 1; l < LMAX; l++) CUDA_CHECK(cudaFree(W[l]));
+        }
+        cublasSetStream(h, 0);
+        CUDA_CHECK(cudaFreeHost(h_counts)); CUDA_CHECK(cudaFreeHost(h_ptr)); CUDA_CHECK(cudaFree(d_ptr));
+        CUDA_CHECK(cudaStreamDestroy(s));
+    }
+
     cublasDestroy(h);
     return bench.finish();
 }

@@ -30,6 +30,7 @@ Raw output of every program is in [`results/`](results/).
 | 01 | + shared-prefix (cascade) path | **2.4–5.7x faster than cuDNN**, 2.2–4.7x faster than our own bandwidth-bound kernel | equivalent to reading 840–1660 GB/s without sharing (2.5–4.9x the DRAM ceiling) |
 | 02 | MoE layer, FP16 grouped GEMM, no host sync | **0.85–1.14x cuBLAS grouped GEMM**, 2.0–4.5x faster than padded batched GEMM | — |
 | 03 | MoE decode, weight-only INT4/INT8 | INT4: **2.4–3.5x faster than cuBLAS FP16 grouped GEMM** at ≤16 tokens. vs tinygemm int4: **1.01–1.34x at ≤16 tokens**, 0.85x at 64 tokens | INT8 at 301–338 GB/s on large experts |
+| 03 | Whole MoE decode layer, end to end | **1.2–1.7x faster than a host-synced cuBLAS layer at the same FP16 precision**, 2.7–3.6x with INT4 (4-layer step, CUDA Graph) | — |
 | 04 | Tensor Core GEMM: buffering × load path | best variant reaches 79% of cuBLAS | — |
 | 05 | Inline PTX `mma.sync.m16n8k16` | 0/128 mismatches; WMMA wastes 50% of MACs on the same 16×8 problem | — |
 | 06 | Softmax: safe / online / vec4 | — | vec4 at 82% of theoretical bandwidth |
@@ -122,6 +123,21 @@ How INT4 went from 206 to 301 GB/s on the Mixtral-like T=1 shape:
 4. **Issue weight loads before the activation and scale loads of each group** (→ 301 GB/s). Otherwise every K-group started with a stall while the activations arrived.
 
 **Where it loses:** at 64 tokens, tinygemm is 1.2x faster. Its Tensor Core path scales with rows, while this CUDA-core GEMV re-streams weights per pass of 8 rows.
+
+### End to end: what "no host sync" buys
+
+cuBLAS grouped GEMM takes its per-group sizes from **host** arrays. A MoE layer built on it therefore has to copy the per-expert counts to the host after routing, stall the stream, rebuild the arguments, and only then launch the GEMM, every layer. Because that host logic depends on the data, the layer also cannot be captured in a CUDA Graph. This repo's layer schedules experts on the device (as vLLM's `fused_moe` does), so it never leaves the GPU and an entire multi-layer decode step can be captured as one graph.
+
+Full layer: route → permute → expert GEMM → combine. Fine-grained MoE (E=64, k=6, d=2048, f=1408). Each of the 4 layers has its own weights; L2 is flushed before every sample, and the methods are timed interleaved. The output of both paths is checked to match.
+
+| time per layer, 4-layer decode step | T = 1 | T = 16 |
+|---|---|---|
+| cuBLAS grouped GEMM FP16, host sync every layer | 0.243 ms | 0.594 ms |
+| ours FP16, launched kernel by kernel | 0.154 ms (1.58x) | 0.524 ms (1.13x) |
+| **ours FP16, CUDA Graph** | **0.140 ms (1.73x)** | **0.505 ms (1.18x)** |
+| **ours W4A16, CUDA Graph** | **0.067 ms (3.62x)** | **0.222 ms (2.68x)** |
+
+At equal precision the expert GEMMs themselves cost about the same (0.119 vs 0.125 ms at T = 1), so the roughly 0.1 ms gap per layer at T = 1 is the host round trip itself. It matters most at small batch, where it is a large share of a short layer, and it shrinks as T grows. Most of the gain comes from removing the sync; graph capture adds a little more once several layers are chained.
 
 ## 04 · Tensor Core GEMM: which optimization needs which
 
