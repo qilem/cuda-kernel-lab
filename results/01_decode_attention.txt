@@ -1,0 +1,104 @@
+﻿=====================================================================
+ Device : NVIDIA GeForce RTX 5060 Laptop GPU  (sm_120)
+ SMs    : 26   |  shared/block: 48 KB  |  L2: 32768 KB
+ Peak BW: 384.0 GB/s  |  Peak FP32: 11228.7 GFLOP/s
+ Ridge  : 29.24 FLOP/byte  (below this arithmetic intensity -> memory-bound)
+=====================================================================
+
+[correctness vs fp64 reference: output (fp16) and LSE, variants v1/v2/v3 x 3 split settings]
+  [ok]   MHA, len 1 / 17 / 1000      v1 chunks=1   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v1 chunks=1   lse  max_abs=4.768e-07 max_rel=2.090e-07
+  [ok]   MHA, len 1 / 17 / 1000      v1 chunks=4   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v1 chunks=4   lse  max_abs=4.768e-07 max_rel=2.090e-07
+  [ok]   MHA, len 1 / 17 / 1000      v1 chunks=7   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v1 chunks=7   lse  max_abs=4.768e-07 max_rel=2.090e-07
+  [ok]   MHA, len 1 / 17 / 1000      v2 chunks=1   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v2 chunks=1   lse  max_abs=4.768e-07 max_rel=3.859e-07
+  [ok]   MHA, len 1 / 17 / 1000      v2 chunks=4   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v2 chunks=4   lse  max_abs=4.768e-07 max_rel=3.859e-07
+  [ok]   MHA, len 1 / 17 / 1000      v2 chunks=7   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v2 chunks=7   lse  max_abs=4.768e-07 max_rel=3.859e-07
+  [ok]   MHA, len 1 / 17 / 1000      v3 chunks=1   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v3 chunks=1   lse  max_abs=4.768e-07 max_rel=3.859e-07
+  [ok]   MHA, len 1 / 17 / 1000      v3 chunks=2   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v3 chunks=2   lse  max_abs=4.768e-07 max_rel=3.859e-07
+  [ok]   MHA, len 1 / 17 / 1000      v3 chunks=7   out  max_abs=1.220e-04 max_rel=7.994e-02
+  [ok]   MHA, len 1 / 17 / 1000      v3 chunks=7   lse  max_abs=4.768e-07 max_rel=3.859e-07
+  [ok]   GQA G=4, mixed lengths      v1 chunks=1   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v1 chunks=1   lse  max_abs=9.537e-07 max_rel=1.140e-07
+  [ok]   GQA G=4, mixed lengths      v1 chunks=4   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v1 chunks=4   lse  max_abs=9.537e-07 max_rel=1.139e-07
+  [ok]   GQA G=4, mixed lengths      v1 chunks=7   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v1 chunks=7   lse  max_abs=9.537e-07 max_rel=1.140e-07
+  [ok]   GQA G=4, mixed lengths      v2 chunks=1   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v2 chunks=1   lse  max_abs=9.537e-07 max_rel=1.240e-07
+  [ok]   GQA G=4, mixed lengths      v2 chunks=3   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v2 chunks=3   lse  max_abs=9.537e-07 max_rel=1.140e-07
+  [ok]   GQA G=4, mixed lengths      v2 chunks=7   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v2 chunks=7   lse  max_abs=9.537e-07 max_rel=1.140e-07
+  [ok]   GQA G=4, mixed lengths      v3 chunks=1   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v3 chunks=1   lse  max_abs=9.537e-07 max_rel=1.240e-07
+  [ok]   GQA G=4, mixed lengths      v3 chunks=1   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v3 chunks=1   lse  max_abs=9.537e-07 max_rel=1.240e-07
+  [ok]   GQA G=4, mixed lengths      v3 chunks=7   out  max_abs=2.434e-04 max_rel=5.660e-02
+  [ok]   GQA G=4, mixed lengths      v3 chunks=7   lse  max_abs=9.537e-07 max_rel=1.140e-07
+  [ok]   GQA G=8                     v1 chunks=1   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v1 chunks=1   lse  max_abs=4.768e-07 max_rel=7.124e-08
+  [ok]   GQA G=8                     v1 chunks=4   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v1 chunks=4   lse  max_abs=4.768e-07 max_rel=7.124e-08
+  [ok]   GQA G=8                     v1 chunks=7   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v1 chunks=7   lse  max_abs=4.768e-07 max_rel=7.120e-08
+  [ok]   GQA G=8                     v2 chunks=1   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v2 chunks=1   lse  max_abs=4.768e-07 max_rel=7.124e-08
+  [ok]   GQA G=8                     v2 chunks=4   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v2 chunks=4   lse  max_abs=4.768e-07 max_rel=7.124e-08
+  [ok]   GQA G=8                     v2 chunks=7   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v2 chunks=7   lse  max_abs=4.768e-07 max_rel=7.120e-08
+  [ok]   GQA G=8                     v3 chunks=1   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v3 chunks=1   lse  max_abs=4.768e-07 max_rel=7.124e-08
+  [ok]   GQA G=8                     v3 chunks=4   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v3 chunks=4   lse  max_abs=4.768e-07 max_rel=7.124e-08
+  [ok]   GQA G=8                     v3 chunks=7   out  max_abs=1.150e-04 max_rel=5.745e-04
+  [ok]   GQA G=8                     v3 chunks=7   lse  max_abs=4.768e-07 max_rel=7.120e-08
+  [ok]   page-boundary lengths, G=2  v1 chunks=1   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v1 chunks=1   lse  max_abs=9.537e-07 max_rel=1.139e-07
+  [ok]   page-boundary lengths, G=2  v1 chunks=15  out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v1 chunks=15  lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v1 chunks=7   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v1 chunks=7   lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v2 chunks=1   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v2 chunks=1   lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v2 chunks=15  out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v2 chunks=15  lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v2 chunks=7   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v2 chunks=7   lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v3 chunks=1   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v3 chunks=1   lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v3 chunks=6   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v3 chunks=6   lse  max_abs=2.384e-07 max_rel=8.462e-08
+  [ok]   page-boundary lengths, G=2  v3 chunks=7   out  max_abs=1.203e-04 max_rel=4.807e-04
+  [ok]   page-boundary lengths, G=2  v3 chunks=7   lse  max_abs=2.384e-07 max_rel=8.462e-08
+
+[achievable DRAM read bandwidth: stream 256 MB with 16 B loads] 341.6 GB/s = 89.0% of theoretical
+
+[performance: Hq=32, Hkv=8 (G=4), D=128, fp16, pages scattered]
+  memory-bound kernel: %BW is vs theoretical 384 GB/s; achievable ceiling is 342 GB/s
+kernel                              time(ms)      GB/s      %BW    GFLOP/s    %FP32  bound
+---------------------------------------------------------------------
+  B=1  L=32K (long context)
+  v2 no split          (   8 blk)     2.4370      55.1    14.3%      220.3     2.0%  mem (AI=4.00)
+  v1 split-KV          ( 128 blk)     0.5263     255.1    66.4%     1020.1     9.1%  mem (AI=4.00)
+  v2 split-KV +swizzle ( 104 blk)     0.3915     342.9    89.3%     1371.4    12.2%  mem (AI=4.00)
+  v3 v2 + cp.async x2  (  48 blk)     0.3844     349.2    90.9%     1396.5    12.4%  mem (AI=4.00)
+  B=8  L=8K
+  v2 no split          (  64 blk)     0.8318     322.9    84.1%     1290.9    11.5%  mem (AI=4.00)
+  v1 split-KV          ( 128 blk)     1.0164     264.2    68.8%     1056.5     9.4%  mem (AI=4.00)
+  v2 split-KV +swizzle (  64 blk)     0.8287     324.1    84.4%     1295.7    11.5%  mem (AI=4.00)
+  v3 v2 + cp.async x2  (  64 blk)     0.9028     297.5    77.5%     1189.3    10.6%  mem (AI=4.00)
+  B=64 L=1K (large batch)
+  v2 no split          ( 512 blk)     0.7697     350.1    91.2%     1395.1    12.4%  mem (AI=3.98)
+  v1 split-KV          ( 512 blk)     1.0244     263.1    68.5%     1048.2     9.3%  mem (AI=3.98)
+  v2 split-KV +swizzle ( 512 blk)     0.7681     350.9    91.4%     1398.0    12.5%  mem (AI=3.98)
+  v3 v2 + cp.async x2  ( 512 blk)     0.7649     352.3    91.7%     1403.8    12.5%  mem (AI=3.98)
+---------------------------------------------------------------------
+  all checks passed

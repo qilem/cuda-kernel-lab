@@ -1,0 +1,7 @@
+﻿
+[LayerNorm statistics, 200 runs each: does the unsafe version ever give a wrong number?]
+  unsafe (2 barriers) worst run: 0 / 2048 rows wrong
+  safe   (3 barriers) worst run: 0 / 2048 rows wrong
+
+  A clean test run proves nothing here. Check with:
+    compute-sanitizer --tool racecheck bin/08_reduction_race 1

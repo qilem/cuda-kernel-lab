@@ -1,0 +1,23 @@
+﻿=====================================================================
+ Device : NVIDIA GeForce RTX 5060 Laptop GPU  (sm_120)
+ SMs    : 26   |  shared/block: 48 KB  |  L2: 32768 KB
+ Peak BW: 384.0 GB/s  |  Peak FP32: 11228.7 GFLOP/s
+ Ridge  : 29.24 FLOP/byte  (below this arithmetic intensity -> memory-bound)
+=====================================================================
+
+[R=1000 C=777]
+  [ok]   naive              max_abs=0.000e+00 max_rel=0.000e+00
+  [ok]   padded tile[32][33]  max_abs=0.000e+00 max_rel=0.000e+00
+  [ok]   XOR swizzle        max_abs=0.000e+00 max_rel=0.000e+00
+
+[R=4096 C=4096]
+  [ok]   naive              max_abs=0.000e+00 max_rel=0.000e+00
+kernel                              time(ms)      GB/s      %BW    GFLOP/s    %FP32  bound
+---------------------------------------------------------------------
+naive                                 1.0982     122.2    31.8%        0.0     0.0%  mem (AI=0.00)
+  [ok]   padded tile[32][33]  max_abs=0.000e+00 max_rel=0.000e+00
+padded tile[32][33]                   0.6190     216.8    56.5%        0.0     0.0%  mem (AI=0.00)
+  [ok]   XOR swizzle        max_abs=0.000e+00 max_rel=0.000e+00
+XOR swizzle                           0.5968     224.9    58.6%        0.0     0.0%  mem (AI=0.00)
+---------------------------------------------------------------------
+  all checks passed

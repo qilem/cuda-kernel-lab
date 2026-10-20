@@ -1,0 +1,16 @@
+﻿=====================================================================
+ Device : NVIDIA GeForce RTX 5060 Laptop GPU  (sm_120)
+ SMs    : 26   |  shared/block: 48 KB  |  L2: 32768 KB
+ Peak BW: 384.0 GB/s  |  Peak FP32: 11228.7 GFLOP/s
+ Ridge  : 29.24 FLOP/byte  (below this arithmetic intensity -> memory-bound)
+=====================================================================
+
+[A: four-term expansion vs direct definition, exact int32 compare]
+  int32 results differing from the definition: 0 / 4096  ok
+
+[B: float -> quantize -> INT8 GEMM -> dequantize, vs fp64 GEMM]
+  int8 weights differing from CPU quantizer : 0 / 524288
+  uint8 acts differing from CPU quantizer   : 0 / 262144
+  INT8 GEMM vs fp64 GEMM: SQNR = 46.1 dB  (8-bit ideal is ~6 dB/bit; >40 dB expected)
+---------------------------------------------------------------------
+  all checks passed

@@ -1,0 +1,9 @@
+﻿
+[inline PTX mma.sync.m16n8k16]
+  mismatches vs CPU reference: 0 / 128
+
+[WMMA 16x16x16 with B zero-padded to 16 columns]
+  mismatches in the 8 useful columns: 0 / 128
+  the other 8 columns are padding: 50% of the MACs are wasted
+
+  all checks passed

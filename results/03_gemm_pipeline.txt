@@ -1,0 +1,22 @@
+﻿=====================================================================
+ Device : NVIDIA GeForce RTX 5060 Laptop GPU  (sm_120)
+ SMs    : 26   |  shared/block: 48 KB  |  L2: 32768 KB
+ Peak BW: 384.0 GB/s  |  Peak FP32: 11228.7 GFLOP/s
+ Ridge  : 29.24 FLOP/byte  (below this arithmetic intensity -> memory-bound)
+=====================================================================
+
+[correctness 256x256x256]
+  [ok]   D  single buffer + LDG/STS   max_abs=1.335e-05 max_rel=8.466e-03
+  [ok]   E  double buffer + LDG/STS   max_abs=1.335e-05 max_rel=8.466e-03
+  [ok]   F  single buffer + cp.async  max_abs=1.335e-05 max_rel=8.466e-03
+  [ok]   G  double buffer + cp.async  max_abs=1.335e-05 max_rel=8.466e-03
+  [ok]      cuBLAS FP16               max_abs=3.815e-06 max_rel=2.288e-03
+
+[timing 4096x4096x4096, fp16 in / fp32 accumulate]
+  D  single buffer + LDG/STS     16.55 ms      8306 GFLOP/s    1.00x vs D
+  E  double buffer + LDG/STS     15.85 ms      8669 GFLOP/s    1.04x vs D
+  F  single buffer + cp.async     6.94 ms     19814 GFLOP/s    2.39x vs D
+  G  double buffer + cp.async     5.11 ms     26911 GFLOP/s    3.24x vs D
+     cuBLAS FP16                  4.08 ms     33663 GFLOP/s    4.05x vs D
+---------------------------------------------------------------------
+  all checks passed

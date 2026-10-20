@@ -1,0 +1,30 @@
+﻿=====================================================================
+ Device : NVIDIA GeForce RTX 5060 Laptop GPU  (sm_120)
+ SMs    : 26   |  shared/block: 48 KB  |  L2: 32768 KB
+ Peak BW: 384.0 GB/s  |  Peak FP32: 11228.7 GFLOP/s
+ Ridge  : 29.24 FLOP/byte  (below this arithmetic intensity -> memory-bound)
+=====================================================================
+
+[correctness vs fp64 reference, row 0 contains a +500 outlier]
+  [ok]   safe   rows=512  N=1000   N not a multiple of 256  max_abs=5.588e-09 max_rel=1.219e-06
+  [ok]   online rows=512  N=1000   N not a multiple of 256  max_abs=3.725e-09 max_rel=1.255e-06
+  [ok]   vec4   rows=512  N=1000   N not a multiple of 256  max_abs=3.725e-09 max_rel=1.222e-06
+  [ok]   safe   rows=64   N=5000   row much longer than block  max_abs=6.985e-10 max_rel=1.184e-06
+  [ok]   online rows=64   N=5000   row much longer than block  max_abs=9.313e-10 max_rel=1.184e-06
+  [ok]   vec4   rows=64   N=5000   row much longer than block  max_abs=9.313e-10 max_rel=1.206e-06
+  [ok]   safe   rows=1000 N=1      N = 1  max_abs=0.000e+00 max_rel=0.000e+00
+  [ok]   online rows=1000 N=1      N = 1  max_abs=0.000e+00 max_rel=0.000e+00
+  [ok]   safe   rows=8    N=70000  very long row  max_abs=8.731e-11 max_rel=1.233e-06
+  [ok]   online rows=8    N=70000  very long row  max_abs=8.731e-11 max_rel=1.293e-06
+  [ok]   vec4   rows=8    N=70000  very long row  max_abs=5.821e-11 max_rel=1.135e-06
+  [ok]   safe   rows=16   N=1001   N odd (vec4 skipped)  max_abs=3.725e-09 max_rel=1.145e-06
+  [ok]   online rows=16   N=1001   N odd (vec4 skipped)  max_abs=2.794e-09 max_rel=1.174e-06
+
+[timing 4096 x 4096 fp32; ideal traffic = read once + write once]
+kernel                              time(ms)      GB/s      %BW    GFLOP/s    %FP32  bound
+---------------------------------------------------------------------
+softmax_safe   (3 passes)             0.4637     289.4    75.4%        0.0     0.0%  mem (AI=0.00)
+softmax_online (2 passes)             0.4529     296.4    77.2%        0.0     0.0%  mem (AI=0.00)
+softmax_vec4   (3 passes)             0.4213     318.6    83.0%        0.0     0.0%  mem (AI=0.00)
+---------------------------------------------------------------------
+  all checks passed
